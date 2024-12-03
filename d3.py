@@ -1,38 +1,35 @@
 import re
 
 
-def parse_input(file_name):
+def parse_input_part_1(file_name):
     with open(file_name) as f:
-        instructions = re.findall("mul\(\d+,\d+\)", '\n'.join(f.readlines()))
-        digits = [re.findall("\d+", instruction) for instruction in instructions]
+        digits = re.findall("mul\((\d+),(\d+)\)", '\n'.join(f.readlines()))
         return [(int(a), int(b)) for a, b in digits]
 
 
 def part_1(file_name):
-    digits = parse_input(file_name)
-    total = 0
-    for a, b in digits:
-        total += a * b
-    return total
+    digits = parse_input_part_1(file_name)
+    return sum(a * b for a, b in digits)
+
+
+def parse_input_part_2(file_name):
+    with open(file_name) as f:
+        text = '\n'.join(f.readlines())
+        return re.finditer("do\(\)|mul\((\d+),(\d+)\)|don't\(\)", text)
 
 
 def part_2(file_name):
-    with open(file_name) as f:
-        text = '\n'.join(f.readlines())
-    total = 0
-    i = 0
+    matches = parse_input_part_2(file_name)
     enabled = True
-    while i < len(text):
-        match = re.match("^mul\((\d+),(\d+)\)", text[i:])
-        if enabled and match:
-            total += int(match.group(1)) * int(match.group(2))
-        match = re.match("do\(\)", text[i:])
-        if match:
+    total = 0
+    for match in matches:
+        entire_match = match.group(0)
+        if entire_match == "do()":
             enabled = True
-        match = re.match("don't\(\)", text[i:])
-        if match:
+        elif entire_match == "don't()":
             enabled = False
-        i += 1
+        elif enabled:  # matched "mul(a,b)"
+            total += int(match.group(1)) * int(match.group(2))
     return total
 
 
