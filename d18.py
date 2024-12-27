@@ -43,5 +43,15 @@ def part_one(positions, max_row, max_col):
     return get_num_steps(set(positions[:1024]), max_row, max_col)
 
 
+def part_two(positions, max_row, max_col):
+    corrupted = set()
+    for r, c in positions:
+        corrupted.add((r, c))
+        steps = get_num_steps(corrupted, max_row, max_col)
+        if steps is None:
+            return c, r  # x, y
+
+
 if __name__ == '__main__':
     print(part_one(parse_input('inputs/d18.txt'), 70, 70))
+    print(part_two(parse_input('inputs/d18.txt'), 70, 70))
