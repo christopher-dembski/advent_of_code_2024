@@ -22,8 +22,11 @@ def parse_input(file_name):
     return grid, start, end
 
 
-def next_position(p, grid, seen):
-    r, c = p
+def manhattan_distance(r1, c1, r2, c2):
+    return abs(r2 - r1) + abs(c2 - c1)
+
+
+def next_position(r, c, grid, seen):
     for dr, dc in DIRECTION_VECTORS:
         ar, ac = r + dr, c + dc
         if grid[ar][ac] == '.' and (ar, ac) not in seen:
@@ -38,32 +41,46 @@ def get_track_positions(grid, start, end):
     while p != end:
         positions.append(p)
         seen.add(p)
-        p = next_position(p, grid, seen)
+        p = next_position(*p, grid, seen)
     positions.append(end)
     return positions
 
 
-def get_cheats(track_positions, track_indexes):
+def get_cheat_positions_part_two(r, c, max_steps=20):
+    cheat_positions = set()
+    for dr in range(-max_steps, max_steps + 1):
+        remaining_steps = max_steps - abs(dr)
+        for dc in range(-remaining_steps, remaining_steps + 1):
+            cheat_positions.add((r + dr, c + dc))
+    return cheat_positions
+
+
+def get_cheat_positions_part_one(r, c):
+    return [(r + dr, c + dc) for dr, dc in TWO_STEP_DIRECTION_VECTORS]
+
+
+def get_cheats(track_positions, track_indexes, part):
+    get_cheat_positions = get_cheat_positions_part_one if part == 1 else get_cheat_positions_part_two
     cheats = defaultdict(int)
     for r, c in track_positions:
         old_track_index = track_indexes[(r, c)]
-        for dr, dc in TWO_STEP_DIRECTION_VECTORS:
-            cheat_pos = r + dr, c + dc
-            if cheat_pos not in track_indexes:
+        for cheat_r, cheat_c in get_cheat_positions(r, c):
+            if (cheat_r, cheat_c) not in track_indexes:  # not on path
                 continue
-            new_track_index = track_indexes[cheat_pos]
-            time_saved = new_track_index - old_track_index - 2
+            new_track_index = track_indexes[(cheat_r, cheat_c)]
+            time_saved = new_track_index - old_track_index - manhattan_distance(r, c, cheat_r, cheat_c)
             if time_saved > 0:
                 cheats[time_saved] += 1
     return cheats
 
 
-def part_one(grid, start, end, threshold=100):
+def solve(grid, start, end, part, threshold=100):
     ordered_positions = get_track_positions(grid, start, end)
     track_indexes = {p: n for n, p in enumerate(ordered_positions)}
-    cheats = get_cheats(ordered_positions, track_indexes)
+    cheats = get_cheats(ordered_positions, track_indexes, part)
     return sum(num_cheats for time_saved, num_cheats in cheats.items() if time_saved >= threshold)
 
 
 if __name__ == '__main__':
-    print(part_one(*parse_input('inputs/d20.txt')))
+    print(solve(*parse_input('inputs/d20.txt'), part=1))
+    print(solve(*parse_input('inputs/d20.txt'), part=2))
