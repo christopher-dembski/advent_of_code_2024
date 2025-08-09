@@ -24,8 +24,29 @@ class Simulator:
             self.print()
         for _ in range(time_steps):
             self.step()
+            max_consecutive = self.max_consecutive_in_row()
+            if max_consecutive > 10:
+                print("Christmas Tree")
+                self.print()
+                return
             if self.display:
                 self.print()
+
+    def max_consecutive_in_row(self):
+        positions = sorted((r, c) for r, c, _, _ in self.robots)
+        max_count = 1
+        prev_r, prev_c = positions[0][0], positions[0][1]
+        count = 1
+        for r, c in positions:
+            if r == prev_r and c == prev_c + 1:
+                count += 1
+                if count > max_count:
+                    max_count = count
+            else:
+                count = 1
+            prev_r = r
+            prev_c = c
+        return max_count
 
     def step(self):
         self.time_step += 1
@@ -48,12 +69,23 @@ class Simulator:
                 for r in range(self.num_rows)]
         print(f'Time: {self.time_step}')
         for row in grid:
-            print(''.join('*'if count else ' ' for count in row))
+            print(''.join('*' if count else ' ' for count in row))
         print('\n')
 
 
-if __name__ == '__main__':
+def part_one():
     test_robots = parse_input('inputs/d14.txt')
     simulator = Simulator(test_robots, 103, 101)
     simulator.simulate(100)
     print(simulator.safety_factor)
+
+
+def part_two():
+    test_robots = parse_input('inputs/d14.txt')
+    simulator = Simulator(test_robots, 103, 101)
+    simulator.simulate(100_000)
+
+
+if __name__ == '__main__':
+    part_one()
+    part_two()
